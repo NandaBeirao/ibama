@@ -1,4 +1,6 @@
  Ibama vs Garimpo
+
+
 Um jogo arcade retrô de ação e estratégia em arquivo único HTML5/Canvas, feito para rodar direto no navegador no celular ou no computador sem dependências externas.
 Sobre o jogo
 Marcador Personagem principal: Técnico do Ibama em uniforme verde-oliva e chapéu de campo.

@@ -1,0 +1,1469 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>IBAMA VS GARIMPO</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100dvh;
+      max-height: 100dvh;
+      background: #142817;
+      color: #f1f8f2;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3px;
+      overflow: hidden;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+
+    /* Carcaça do console portátil retrô */
+    .console-shell {
+      width: 100%;
+      max-width: 720px;
+      height: 100%;
+      max-height: 100%;
+      background: #1d3821;
+      border: 2.5px solid #3b6138;
+      border-radius: 14px;
+      padding: 5px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.65);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 4px;
+      overflow: hidden;
+    }
+
+    /* ==================== CABEÇALHO SUPERIOR COMPACTO ==================== */
+    .top-hud {
+      flex: 0 0 auto;
+      width: 100%;
+      background: #102013;
+      border: 2px solid #3b6138;
+      border-radius: 10px;
+      padding: 4px 7px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .game-title {
+      width: 100%;
+      text-align: center;
+      font-size: clamp(12px, 3.6vw, 17px);
+      font-weight: 900;
+      color: #f4d03f;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      line-height: 1.1;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    .hud-row {
+      width: 100%;
+      display: flex;
+      align-items: stretch;
+      justify-content: space-between;
+      gap: 5px;
+    }
+
+    .hud-pill {
+      flex: 1 1 0;
+      min-width: 0;
+      background: #1d3821;
+      border: 1.5px solid #3b6138;
+      border-radius: 7px;
+      padding: 3px 6px;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    .hud-pill-label {
+      font-size: 9.5px;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: #95d5b2;
+      letter-spacing: 0.3px;
+      line-height: 1;
+    }
+
+    .hud-pill-value {
+      font-size: clamp(13px, 3.5vw, 15px);
+      font-weight: 900;
+      color: #ffffff;
+      line-height: 1;
+    }
+
+    .hud-pill-value.gold {
+      color: #f4d03f;
+    }
+
+    .btn-restart {
+      flex: 0 0 auto;
+      background: linear-gradient(180deg, #52853d 0%, #386128 100%);
+      color: #ffffff;
+      border: 2px solid #88bf70;
+      border-radius: 7px;
+      padding: 4px 11px;
+      font-size: clamp(11.5px, 3.1vw, 13.5px);
+      font-weight: 800;
+      white-space: nowrap;
+      cursor: pointer;
+      box-shadow: 0 2px 0 #1b3013;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.08s ease, filter 0.12s ease;
+    }
+
+    .btn-restart:hover {
+      filter: brightness(1.08);
+    }
+
+    .btn-restart:active {
+      transform: translateY(2px);
+      box-shadow: 0 0 0 #1b3013;
+    }
+
+    /* ==================== ARENA JOGÁVEL CENTRAL ==================== */
+    .arena-wrapper {
+      flex: 1 1 auto;
+      min-height: 0;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .board-frame {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #2d5228;
+      border: 2.5px solid #487d43;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.35);
+      max-width: 100%;
+      max-height: 100%;
+    }
+
+    canvas#gameCanvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      background: #a3cf82;
+      image-rendering: crisp-edges;
+    }
+
+    /* ==================== OVERLAY DE FIM DE JOGO ==================== */
+    .end-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(10, 20, 12, 0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 8px;
+      z-index: 20;
+    }
+
+    .end-overlay.active {
+      display: flex;
+    }
+
+    .end-card {
+      width: 100%;
+      max-width: 330px;
+      max-height: 100%;
+      background: #1d3821;
+      border: 2.5px solid #f4d03f;
+      border-radius: 12px;
+      padding: 11px 13px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.75);
+      overflow: hidden;
+    }
+
+    .end-card h2 {
+      font-size: clamp(16px, 4.6vw, 21px);
+      font-weight: 900;
+      color: #f4d03f;
+      line-height: 1.15;
+    }
+
+    .end-card p {
+      font-size: clamp(11px, 3vw, 13px);
+      color: #d8f3dc;
+      line-height: 1.25;
+    }
+
+    .end-score-box {
+      width: 100%;
+      background: #102013;
+      border: 1.5px solid #3b6138;
+      border-radius: 8px;
+      padding: 5px 10px;
+      font-size: clamp(12px, 3.2vw, 14px);
+      font-weight: 800;
+      color: #ffffff;
+    }
+
+    .btn-play-again {
+      width: 100%;
+      background: linear-gradient(180deg, #ffd700 0%, #e0a800 100%);
+      color: #142817;
+      border: 2px solid #fff08a;
+      border-radius: 9px;
+      padding: 8px 14px;
+      font-size: clamp(12px, 3.3vw, 14.5px);
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      cursor: pointer;
+      box-shadow: 0 3px 0 #7a5c00;
+      transition: transform 0.08s ease;
+    }
+
+    .btn-play-again:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 #7a5c00;
+    }
+
+    /* ==================== CONTROLES ERGONÔMICOS ANTI-TOQUE ACIDENTAL ==================== */
+    .controls-panel {
+      flex: 0 0 auto;
+      width: 100%;
+      background: #102013;
+      border: 2px solid #3b6138;
+      border-radius: 12px;
+      padding: 6px 10px max(22px, calc(env(safe-area-inset-bottom, 0px) + 18px)) 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .legend-line {
+      width: 100%;
+      text-align: center;
+      font-size: clamp(10px, 2.7vw, 12px);
+      color: #b7e4c7;
+      line-height: 1.15;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .legend-line strong {
+      color: #f4d03f;
+    }
+
+    /* Separação diagonal: D-Pad ancorado embaixo à esquerda, Bomba menor no topo à direita */
+    .pad-row {
+      width: 100%;
+      display: flex;
+      align-items: stretch;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 0 2px;
+    }
+
+    /* D-Pad compacto colado no canto inferior esquerdo */
+    .dpad-grid {
+      align-self: flex-end;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(46px, 54px));
+      grid-template-rows: repeat(3, minmax(42px, 48px));
+      gap: 3px;
+      margin-top: 6px;
+    }
+
+    .dpad-btn {
+      width: 100%;
+      height: 100%;
+      min-width: 46px;
+      min-height: 42px;
+      background: linear-gradient(180deg, #2e5436 0%, #213d27 100%);
+      color: #ffffff;
+      border: 2px solid #538a5e;
+      border-radius: 11px;
+      font-size: 18px;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 3px 0 #0f1f12;
+      touch-action: none;
+    }
+
+    .dpad-btn.pressed,
+    .dpad-btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 #0f1f12;
+      background: #42754c;
+      border-color: #95d5b2;
+    }
+
+    .dpad-hub {
+      width: 100%;
+      height: 100%;
+      background: #162b1a;
+      border: 1.5px solid #335739;
+      border-radius: 9px;
+    }
+
+    /* Zona direita com vão seguro e botão BOMBA reduzido no topo direito */
+    .action-zone {
+      flex: 0 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      justify-content: flex-start;
+      padding-left: 12px;
+      padding-bottom: 18px;
+    }
+
+    .bomb-btn {
+      width: 70px;
+      height: 70px;
+      flex: 0 0 auto;
+      background: radial-gradient(circle at 35% 30%, #ff7324 0%, #e04300 72%, #b53200 100%);
+      color: #ffffff;
+      border: 2.5px solid #ffaa75;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1px;
+      cursor: pointer;
+      box-shadow: 0 4px 0 #631b00, 0 6px 14px rgba(0, 0, 0, 0.5);
+      touch-action: none;
+      transition: transform 0.06s ease;
+    }
+
+    .bomb-btn:active {
+      transform: translateY(2px) scale(0.96);
+      box-shadow: 0 2px 0 #631b00;
+    }
+
+    .bomb-btn-icon {
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    .bomb-btn-label {
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+    }
+
+    @media (min-width: 680px) {
+      .controls-panel {
+        padding-bottom: 12px;
+      }
+
+      .pad-row {
+        justify-content: space-around;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="console-shell" id="consoleShell">
+    <!-- Cabeçalho Superior Compacto -->
+    <header class="top-hud">
+      <h1 class="game-title">BOMBERMAN IBAMA VS GARIMPO</h1>
+      <div class="hud-row">
+        <div class="hud-pill">
+          <span class="hud-pill-label">PONTOS:</span>
+          <span class="hud-pill-value gold" id="scoreVal">0</span>
+        </div>
+        <div class="hud-pill">
+          <span class="hud-pill-label">GARIMPEIROS:</span>
+          <span class="hud-pill-value" id="enemiesVal">3</span>
+        </div>
+        <button type="button" class="btn-restart" id="restartBtn">Reiniciar</button>
+      </div>
+    </header>
+
+    <!-- Arena Central (13x13 no mobile retrato, 17x13 no paisagem/desktop) -->
+    <main class="arena-wrapper" id="arena">
+      <div class="board-frame" id="boardFrame">
+        <canvas id="gameCanvas" width="572" height="572"></canvas>
+
+        <!-- Aviso de Vitória ou Fim de Jogo -->
+        <div class="end-overlay" id="endOverlay">
+          <div class="end-card" id="endCard">
+            <h2 id="endTitle">Área Limpa!</h2>
+            <p id="endDesc">Todos os garimpeiros foram neutralizados e a mata está protegida.</p>
+            <div class="end-score-box" id="endScore">Pontuação Final: 0</div>
+            <button type="button" class="btn-play-again" id="playAgainBtn">JOGAR NOVAMENTE</button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Controles Inferiores Ergonômicos -->
+    <footer class="controls-panel">
+      <div class="legend-line">
+        <strong>Picareta:</strong> +10 &nbsp;•&nbsp; <strong>Garimpeiro:</strong> +50 &nbsp;•&nbsp; Setas / Espaço
+      </div>
+
+      <div class="pad-row">
+        <div class="dpad-grid" aria-label="Direcional">
+          <div></div>
+          <button type="button" class="dpad-btn" data-dir="up" aria-label="Cima">▲</button>
+          <div></div>
+          <button type="button" class="dpad-btn" data-dir="left" aria-label="Esquerda">◀</button>
+          <div class="dpad-hub"></div>
+          <button type="button" class="dpad-btn" data-dir="right" aria-label="Direita">▶</button>
+          <div></div>
+          <button type="button" class="dpad-btn" data-dir="down" aria-label="Baixo">▼</button>
+          <div></div>
+        </div>
+
+        <div class="action-zone">
+          <button type="button" class="bomb-btn" id="bombBtn" aria-label="Colocar Bomba">
+            <span class="bomb-btn-icon">💣</span>
+            <span class="bomb-btn-label">BOMBA</span>
+          </button>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      // Tamanho base de célula e escala ampliada dos sprites (~1.16x)
+      const TILE = 44;
+      const SPRITE_SCALE = 1.16;
+
+      // Dimensões dinâmicas da grade: 13x13 no mobile retrato, 17x13 no paisagem/desktop
+      let ROWS = 13;
+      let COLS = 13;
+
+      // Tipos de célula
+      const EMPTY = 0;
+      const BORDER_TREE = 1;
+      const PILLAR = 2;
+      const PICKAXE = 3;
+
+      // Regras de bomba e explosão
+      const BOMB_FUSE = 1.8;
+      const BLAST_DURATION = 0.45;
+      const BLAST_RANGE = 2;
+
+      const arenaWrapper = document.getElementById('arena');
+      const boardFrame = document.getElementById('boardFrame');
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+
+      const scoreEl = document.getElementById('scoreVal');
+      const enemiesEl = document.getElementById('enemiesVal');
+      const restartBtn = document.getElementById('restartBtn');
+      const playAgainBtn = document.getElementById('playAgainBtn');
+      const bombBtn = document.getElementById('bombBtn');
+      const endOverlay = document.getElementById('endOverlay');
+      const endCard = document.getElementById('endCard');
+      const endTitle = document.getElementById('endTitle');
+      const endDesc = document.getElementById('endDesc');
+      const endScore = document.getElementById('endScore');
+
+      function isMobilePortrait() {
+        return window.innerWidth <= 520 && window.innerHeight > window.innerWidth;
+      }
+
+      function getTargetGridSize() {
+        return isMobilePortrait() ? { rows: 13, cols: 13 } : { rows: 13, cols: 17 };
+      }
+
+      // Ajusta exatamente a moldura do tabuleiro ao espaço disponível na arena
+      function fitBoardToArena() {
+        const availW = arenaWrapper.clientWidth;
+        const availH = arenaWrapper.clientHeight;
+        if (availW <= 0 || availH <= 0) return;
+
+        const aspect = COLS / ROWS;
+        const fitW = Math.floor(Math.min(availW, availH * aspect));
+        const fitH = Math.floor(fitW / aspect);
+
+        boardFrame.style.width = fitW + 'px';
+        boardFrame.style.height = fitH + 'px';
+      }
+
+      function handleViewportResize() {
+        const target = getTargetGridSize();
+        if (target.rows !== ROWS || target.cols !== COLS) {
+          initGame();
+        } else {
+          fitBoardToArena();
+        }
+      }
+
+      window.addEventListener('resize', handleViewportResize);
+      if (window.ResizeObserver) {
+        new ResizeObserver(fitBoardToArena).observe(arenaWrapper);
+      }
+
+      // Estado do jogo
+      let grid = [];
+      let pillarVariant = [];
+      let pickaxeVariant = [];
+      let score = 0;
+      let gameState = 'PLAYING'; // 'PLAYING' | 'WIN' | 'GAMEOVER'
+      let animTime = 0;
+      let lastTimestamp = 0;
+
+      // Jogador (Técnico do Ibama)
+      let player = {
+        r: 1,
+        c: 1,
+        facing: 'down',
+        stepPhase: 0
+      };
+
+      // Inimigos (Garimpeiros carregando sacos de ouro)
+      let enemies = [];
+
+      // Bomba, explosões e partículas
+      let activeBomb = null;
+      let explosions = [];
+      let particles = [];
+
+      // Controle de movimento contínuo e proteção anti-toque acidental na bomba
+      let heldDir = null;
+      let holdDelayTimer = 0;
+      let holdRepeatTimer = 0;
+      let activeDpadPointerId = null;
+      let lastDpadReleaseTime = 0;
+
+      function initGame() {
+        const target = getTargetGridSize();
+        ROWS = target.rows;
+        COLS = target.cols;
+
+        canvas.width = COLS * TILE;
+        canvas.height = ROWS * TILE;
+        boardFrame.style.aspectRatio = COLS + ' / ' + ROWS;
+
+        grid = Array.from({ length: ROWS }, () => Array(COLS).fill(EMPTY));
+        pillarVariant = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
+        pickaxeVariant = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
+
+        const maxR = ROWS - 2;
+        const maxC = COLS - 2;
+
+        const safeCells = new Set([
+          '1,1', '1,2', '2,1',
+          `1,${maxC}`, `1,${maxC - 1}`, `2,${maxC}`,
+          `${maxR},1`, `${maxR},2`, `${maxR - 1},1`,
+          `${maxR},${maxC}`, `${maxR},${maxC - 1}`, `${maxR - 1},${maxC}`
+        ]);
+
+        for (let r = 0; r < ROWS; r++) {
+          for (let c = 0; c < COLS; c++) {
+            if (r === 0 || r === ROWS - 1 || c === 0 || c === COLS - 1) {
+              grid[r][c] = BORDER_TREE;
+            } else if (r % 2 === 0 && c % 2 === 0) {
+              grid[r][c] = PILLAR;
+              pillarVariant[r][c] = (r + c) % 4 === 0 ? 1 : 0;
+            } else if (!safeCells.has(r + ',' + c)) {
+              if (Math.random() < 0.52) {
+                grid[r][c] = PICKAXE;
+                pickaxeVariant[r][c] = ((r * 7 + c * 13) % 3) - 1;
+              }
+            }
+          }
+        }
+
+        player = {
+          r: 1,
+          c: 1,
+          facing: 'down',
+          stepPhase: 0
+        };
+
+        enemies = [
+          { r: 1, c: maxC, dr: 1, dc: 0, moveTimer: 0, moveInterval: 0.42, stepPhase: 0 },
+          { r: maxR, c: 1, dr: 0, dc: 1, moveTimer: 0.14, moveInterval: 0.45, stepPhase: 1.5 },
+          { r: maxR, c: maxC, dr: -1, dc: 0, moveTimer: 0.28, moveInterval: 0.40, stepPhase: 3.1 }
+        ];
+
+        activeBomb = null;
+        explosions = [];
+        particles = [];
+        heldDir = null;
+        activeDpadPointerId = null;
+        score = 0;
+        gameState = 'PLAYING';
+        endOverlay.classList.remove('active');
+        updateHUD();
+        fitBoardToArena();
+      }
+
+      function updateHUD() {
+        scoreEl.textContent = String(score);
+        enemiesEl.textContent = String(enemies.length);
+      }
+
+      function showEndOverlay(win, message) {
+        gameState = win ? 'WIN' : 'GAMEOVER';
+        heldDir = null;
+        activeDpadPointerId = null;
+        endTitle.textContent = win ? 'Área Limpa!' : 'Fim de Jogo!';
+        endTitle.style.color = win ? '#f4d03f' : '#ff6b6b';
+        endCard.style.borderColor = win ? '#f4d03f' : '#ff6b6b';
+        endDesc.textContent = message;
+        endScore.textContent = 'Pontuação Final: ' + score;
+        endOverlay.classList.add('active');
+      }
+
+      function isWalkable(r, c) {
+        if (r < 0 || r >= ROWS || c < 0 || c >= COLS) return false;
+        if (grid[r][c] !== EMPTY) return false;
+        if (activeBomb && activeBomb.r === r && activeBomb.c === c) return false;
+        return true;
+      }
+
+      function stepDirection(dirName) {
+        if (gameState !== 'PLAYING') return;
+        let dr = 0;
+        let dc = 0;
+        if (dirName === 'up') dr = -1;
+        else if (dirName === 'down') dr = 1;
+        else if (dirName === 'left') dc = -1;
+        else if (dirName === 'right') dc = 1;
+
+        player.facing = dirName;
+        const nr = player.r + dr;
+        const nc = player.c + dc;
+        if (isWalkable(nr, nc)) {
+          player.r = nr;
+          player.c = nc;
+          player.stepPhase += 1.6;
+          checkCollisions();
+        }
+      }
+
+      function placeBomb() {
+        if (gameState !== 'PLAYING') return;
+        if (activeBomb !== null) return;
+        activeBomb = {
+          r: player.r,
+          c: player.c,
+          timer: BOMB_FUSE
+        };
+      }
+
+      function spawnParticles(r, c, color, count) {
+        const cx = c * TILE + TILE / 2;
+        const cy = r * TILE + TILE / 2;
+        for (let i = 0; i < count; i++) {
+          const angle = (Math.PI * 2 * i) / count + Math.random() * 0.5;
+          const speed = 42 + Math.random() * 98;
+          particles.push({
+            x: cx,
+            y: cy,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            life: 0.35 + Math.random() * 0.25,
+            maxLife: 0.6,
+            size: 3.5 + Math.random() * 3,
+            color: color
+          });
+        }
+      }
+
+      function detonateBomb() {
+        if (!activeBomb) return;
+        const { r: br, c: bc } = activeBomb;
+        activeBomb = null;
+
+        const blastCells = [{ r: br, c: bc }];
+        const dirs = [
+          [-1, 0],
+          [1, 0],
+          [0, -1],
+          [0, 1]
+        ];
+
+        for (const [dr, dc] of dirs) {
+          for (let step = 1; step <= BLAST_RANGE; step++) {
+            const rr = br + dr * step;
+            const cc = bc + dc * step;
+            if (rr < 0 || rr >= ROWS || cc < 0 || cc >= COLS) break;
+            const cell = grid[rr][cc];
+            if (cell === BORDER_TREE || cell === PILLAR) {
+              break;
+            }
+            blastCells.push({ r: rr, c: cc });
+            if (cell === PICKAXE) {
+              grid[rr][cc] = EMPTY;
+              score += 10;
+              spawnParticles(rr, cc, '#8b5a2b', 8);
+              spawnParticles(rr, cc, '#cfd8dc', 6);
+              break;
+            }
+          }
+        }
+
+        for (const cell of blastCells) {
+          explosions.push({ r: cell.r, c: cell.c, timer: BLAST_DURATION });
+          spawnParticles(cell.r, cell.c, '#ff5a00', 4);
+        }
+
+        updateHUD();
+        checkCollisions();
+      }
+
+      function checkCollisions() {
+        if (gameState !== 'PLAYING') return;
+
+        // 1. Garimpeiros atingidos pela chama
+        const aliveEnemies = [];
+        for (const enemy of enemies) {
+          const hit = explosions.some(ex => ex.r === enemy.r && ex.c === enemy.c);
+          if (hit) {
+            score += 50;
+            spawnParticles(enemy.r, enemy.c, '#ffd700', 14);
+          } else {
+            aliveEnemies.push(enemy);
+          }
+        }
+        if (aliveEnemies.length !== enemies.length) {
+          enemies = aliveEnemies;
+          updateHUD();
+        }
+
+        // 2. Técnico atingido pela chama ou por garimpeiro
+        const burned = explosions.some(ex => ex.r === player.r && ex.c === player.c);
+        const caught = enemies.some(en => en.r === player.r && en.c === player.c);
+
+        if (burned) {
+          spawnParticles(player.r, player.c, '#ff5a00', 14);
+          showEndOverlay(false, 'Cuidado com a explosão! O técnico foi atingido pela bomba.');
+          return;
+        }
+
+        if (caught) {
+          spawnParticles(player.r, player.c, '#ff5a00', 14);
+          showEndOverlay(false, 'Um garimpeiro interceptou o técnico durante a patrulha.');
+          return;
+        }
+
+        // 3. Vitória ao neutralizar todos os garimpeiros
+        if (enemies.length === 0) {
+          showEndOverlay(true, 'Todos os garimpeiros foram neutralizados e a mata está protegida!');
+        }
+      }
+
+      function update(dt) {
+        animTime += dt;
+
+        for (let i = particles.length - 1; i >= 0; i--) {
+          const p = particles[i];
+          p.x += p.vx * dt;
+          p.y += p.vy * dt;
+          p.life -= dt;
+          if (p.life <= 0) {
+            particles.splice(i, 1);
+          }
+        }
+
+        if (gameState !== 'PLAYING') return;
+
+        if (heldDir) {
+          if (holdDelayTimer > 0) {
+            holdDelayTimer -= dt;
+          } else {
+            holdRepeatTimer -= dt;
+            if (holdRepeatTimer <= 0) {
+              holdRepeatTimer = 0.14;
+              stepDirection(heldDir);
+            }
+          }
+        }
+
+        if (activeBomb) {
+          activeBomb.timer -= dt;
+          if (activeBomb.timer <= 0) {
+            detonateBomb();
+          }
+        }
+
+        if (explosions.length > 0) {
+          for (let i = explosions.length - 1; i >= 0; i--) {
+            explosions[i].timer -= dt;
+            if (explosions[i].timer <= 0) {
+              explosions.splice(i, 1);
+            }
+          }
+          checkCollisions();
+        }
+
+        const allDirs = [
+          [-1, 0],
+          [1, 0],
+          [0, -1],
+          [0, 1]
+        ];
+
+        for (const enemy of enemies) {
+          enemy.stepPhase += dt * 10;
+          enemy.moveTimer += dt;
+          if (enemy.moveTimer >= enemy.moveInterval) {
+            enemy.moveTimer = 0;
+
+            const nextR = enemy.r + enemy.dr;
+            const nextC = enemy.c + enemy.dc;
+            const blocked = !isWalkable(nextR, nextC);
+
+            if (blocked || Math.random() < 0.25) {
+              const valid = allDirs.filter(([dr, dc]) => isWalkable(enemy.r + dr, enemy.c + dc));
+              if (valid.length > 0) {
+                const nonReverse = valid.filter(([dr, dc]) => !(dr === -enemy.dr && dc === -enemy.dc));
+                const choices = nonReverse.length > 0 ? nonReverse : valid;
+                const pick = choices[Math.floor(Math.random() * choices.length)];
+                enemy.dr = pick[0];
+                enemy.dc = pick[1];
+              } else {
+                enemy.dr = 0;
+                enemy.dc = 0;
+              }
+            }
+
+            if (isWalkable(enemy.r + enemy.dr, enemy.c + enemy.dc)) {
+              enemy.r += enemy.dr;
+              enemy.c += enemy.dc;
+            }
+          }
+        }
+
+        checkCollisions();
+      }
+
+      // ================= RENDERIZAÇÃO DO TABULEIRO E SPRITES AMPLIADOS =================
+
+      function drawFloorTile(r, c) {
+        const x = c * TILE;
+        const y = r * TILE;
+        const isEven = (r + c) % 2 === 0;
+
+        ctx.fillStyle = isEven ? '#a3cf82' : '#96c474';
+        ctx.fillRect(x, y, TILE, TILE);
+
+        const seed = (r * 31 + c * 17) % 7;
+        ctx.fillStyle = isEven ? '#88b865' : '#7dae5b';
+        if (seed === 1 || seed === 4) {
+          ctx.fillRect(x + 9, y + 13, 3.5, 5.5);
+          ctx.fillRect(x + 14, y + 11, 3.5, 7.5);
+        } else if (seed === 2 || seed === 5) {
+          ctx.fillRect(x + 25, y + 27, 3.5, 6);
+          ctx.fillRect(x + 30, y + 25, 3.5, 8);
+        }
+
+        ctx.strokeStyle = '#85b364';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x + 0.5, y + 0.5, TILE - 1, TILE - 1);
+      }
+
+      function drawBorderTree(r, c) {
+        const x = c * TILE;
+        const y = r * TILE;
+
+        ctx.fillStyle = '#2d5228';
+        ctx.fillRect(x, y, TILE, TILE);
+
+        ctx.fillStyle = '#1f3d1d';
+        ctx.beginPath();
+        ctx.arc(x + TILE * 0.5, y + TILE * 0.56, TILE * 0.45, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#3e7036';
+        ctx.beginPath();
+        ctx.arc(x + TILE * 0.46, y + TILE * 0.44, TILE * 0.39, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#528c46';
+        ctx.beginPath();
+        ctx.arc(x + TILE * 0.38, y + TILE * 0.36, TILE * 0.18, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      function drawPillar(r, c) {
+        const cx = c * TILE + TILE / 2;
+        const cy = r * TILE + TILE / 2;
+
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.scale(SPRITE_SCALE, SPRITE_SCALE);
+
+        if (pillarVariant[r][c] === 1) {
+          // Toco de árvore cortada
+          ctx.fillStyle = '#3e2723';
+          ctx.beginPath();
+          ctx.ellipse(0, 6, 17, 11, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = '#5c3d28';
+          ctx.fillRect(-15, -8, 30, 14);
+
+          ctx.fillStyle = '#a1887f';
+          ctx.beginPath();
+          ctx.ellipse(0, -8, 15, 8, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = '#3e2723';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+
+          ctx.strokeStyle = '#6d4c41';
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.ellipse(0, -8, 8, 4, 0, 0, Math.PI * 2);
+          ctx.stroke();
+        } else {
+          // Rocha com musgo
+          ctx.fillStyle = '#374151';
+          ctx.beginPath();
+          ctx.roundRect(-18, -17, 36, 35, 10);
+          ctx.fill();
+
+          ctx.fillStyle = '#7b848c';
+          ctx.beginPath();
+          ctx.roundRect(-16, -16, 32, 31, 8);
+          ctx.fill();
+
+          ctx.fillStyle = '#9aa3ab';
+          ctx.beginPath();
+          ctx.ellipse(-4, -9, 9, 4, -0.2, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = '#3e7036';
+          ctx.beginPath();
+          ctx.ellipse(5, -10, 8, 4, 0.25, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        ctx.restore();
+      }
+
+      function drawPickaxeBlock(r, c) {
+        const cx = c * TILE + TILE / 2;
+        const cy = r * TILE + TILE / 2;
+        const tilt = pickaxeVariant[r][c] * 0.14;
+
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.scale(SPRITE_SCALE, SPRITE_SCALE);
+
+        // Monte de terra escura na base
+        ctx.fillStyle = '#2d1c0c';
+        ctx.beginPath();
+        ctx.ellipse(0, 13, 18, 7, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#4a3219';
+        ctx.beginPath();
+        ctx.ellipse(0, 11, 16, 6, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#6d4c2f';
+        ctx.beginPath();
+        ctx.arc(-11, 12, 2.3, 0, Math.PI * 2);
+        ctx.arc(11, 12, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.rotate(tilt);
+
+        // Cabo espesso de madeira
+        ctx.fillStyle = '#8b5a2b';
+        ctx.strokeStyle = '#23170d';
+        ctx.lineWidth = 2.4;
+        ctx.beginPath();
+        ctx.roundRect(-3.8, -12, 7.6, 26, 2.5);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = '#b07438';
+        ctx.fillRect(-1.5, -10, 2.5, 22);
+
+        // Cabeça metálica curva da picareta
+        ctx.fillStyle = '#cfd8dc';
+        ctx.strokeStyle = '#1c2529';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(-18, -3);
+        ctx.quadraticCurveTo(0, -17, 18, -3);
+        ctx.quadraticCurveTo(0, -9, -18, -3);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Olhal central de ferro
+        ctx.fillStyle = '#90a4ae';
+        ctx.strokeStyle = '#1c2529';
+        ctx.lineWidth = 2.2;
+        ctx.beginPath();
+        ctx.roundRect(-5.5, -13, 11, 8, 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // Brilho metálico e reflexo dourado
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        ctx.moveTo(-13, -6);
+        ctx.quadraticCurveTo(0, -13.5, 13, -6);
+        ctx.stroke();
+
+        ctx.fillStyle = '#ffd700';
+        ctx.beginPath();
+        ctx.arc(0, -9, 2.1, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+      }
+
+      function drawBomb() {
+        if (!activeBomb) return;
+        const cx = activeBomb.c * TILE + TILE / 2;
+        const cy = activeBomb.r * TILE + TILE / 2 + 1;
+        const pulse = SPRITE_SCALE * (1 + Math.sin(animTime * 16) * 0.08);
+
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.scale(pulse, pulse);
+
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
+        ctx.beginPath();
+        ctx.ellipse(0, 14, 13, 5, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#23272b';
+        ctx.strokeStyle = '#0d0f12';
+        ctx.lineWidth = 2.2;
+        ctx.beginPath();
+        ctx.arc(0, 1, 13, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = '#5c6670';
+        ctx.beginPath();
+        ctx.arc(-4.5, -3.5, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#495057';
+        ctx.fillRect(-3.5, -14, 7, 4);
+
+        ctx.strokeStyle = '#d4a373';
+        ctx.lineWidth = 2.2;
+        ctx.beginPath();
+        ctx.moveTo(0, -14);
+        ctx.quadraticCurveTo(6, -19, 10, -16);
+        ctx.stroke();
+
+        const sparkR = 3.5 + Math.sin(animTime * 35) * 1.5;
+        ctx.fillStyle = '#ff5a00';
+        ctx.beginPath();
+        ctx.arc(10, -16, sparkR + 2, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#ffe63b';
+        ctx.beginPath();
+        ctx.arc(10, -16, sparkR, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+      }
+
+      function drawExplosions() {
+        for (const ex of explosions) {
+          const x = ex.c * TILE;
+          const y = ex.r * TILE;
+          const ratio = Math.max(0, ex.timer / BLAST_DURATION);
+
+          ctx.fillStyle = '#ff5a00';
+          ctx.beginPath();
+          ctx.roundRect(x + 2, y + 2, TILE - 4, TILE - 4, 8);
+          ctx.fill();
+
+          const inset = 8 + (1 - ratio) * 4;
+          ctx.fillStyle = '#ffe63b';
+          ctx.beginPath();
+          ctx.roundRect(x + inset, y + inset, TILE - inset * 2, TILE - inset * 2, 5);
+          ctx.fill();
+        }
+      }
+
+      function drawPlayer() {
+        const cx = player.c * TILE + TILE / 2;
+        const cy = player.r * TILE + TILE / 2 + 1;
+        const idleBob = Math.abs(Math.sin(animTime * 4 + player.stepPhase)) * 1.6;
+        const legSwing = Math.sin(player.stepPhase) * 3;
+
+        ctx.save();
+        ctx.translate(cx, cy - idleBob);
+        ctx.scale(SPRITE_SCALE, SPRITE_SCALE);
+
+        // Sombra no chão
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+        ctx.beginPath();
+        ctx.ellipse(0, 16 + idleBob, 13, 4.5, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Botas
+        ctx.fillStyle = '#261c15';
+        ctx.fillRect(-8, 9 + legSwing * 0.4, 6, 7);
+        ctx.fillRect(2, 9 - legSwing * 0.4, 6, 7);
+
+        // Calça e cinto escuro
+        ctx.fillStyle = '#3f5e2c';
+        ctx.fillRect(-8, 3, 16, 7);
+        ctx.fillStyle = '#23170d';
+        ctx.fillRect(-9, 2, 18, 2.5);
+
+        // Túnica verde-oliva do técnico do Ibama
+        ctx.fillStyle = '#557a3e';
+        ctx.strokeStyle = '#1f3616';
+        ctx.lineWidth = 1.9;
+        ctx.beginPath();
+        ctx.roundRect(-10, -7, 20, 11, 4);
+        ctx.fill();
+        ctx.stroke();
+
+        // Distintivo dourado no peito
+        ctx.fillStyle = '#ffd700';
+        ctx.fillRect(-6, -4, 4.5, 3.2);
+
+        // Braços
+        ctx.fillStyle = '#557a3e';
+        ctx.fillRect(-13, -5, 4, 9);
+        ctx.fillRect(9, -5, 4, 9);
+
+        // Rosto
+        ctx.fillStyle = '#f1c29b';
+        ctx.strokeStyle = '#2b1d12';
+        ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        ctx.arc(0, -12, 7.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // Olhos acompanhando direção
+        ctx.fillStyle = '#1a1a1a';
+        const lookX = player.facing === 'left' ? -2 : player.facing === 'right' ? 2 : 0;
+        ctx.fillRect(-3.5 + lookX, -13, 2.1, 2.6);
+        ctx.fillRect(1.5 + lookX, -13, 2.1, 2.6);
+
+        // Chapéu de campo de aba larga
+        ctx.fillStyle = '#c9b378';
+        ctx.strokeStyle = '#3d341a';
+        ctx.lineWidth = 1.7;
+        ctx.beginPath();
+        ctx.ellipse(0, -16, 14, 4.2, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = '#b8a165';
+        ctx.beginPath();
+        ctx.roundRect(-7.5, -22, 15, 7, 3);
+        ctx.fill();
+        ctx.stroke();
+
+        // Faixa verde no chapéu
+        ctx.fillStyle = '#3f5e2c';
+        ctx.fillRect(-7, -18, 14, 2.3);
+
+        ctx.restore();
+      }
+
+      function drawEnemies() {
+        for (const enemy of enemies) {
+          const cx = enemy.c * TILE + TILE / 2;
+          const cy = enemy.r * TILE + TILE / 2 + 1;
+          const bob = Math.abs(Math.sin(enemy.stepPhase)) * 2.2;
+          const legSwing = Math.sin(enemy.stepPhase) * 3.5;
+
+          ctx.save();
+          ctx.translate(cx, cy - bob);
+          ctx.scale(SPRITE_SCALE, SPRITE_SCALE);
+
+          // Sombra
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.26)';
+          ctx.beginPath();
+          ctx.ellipse(0, 16 + bob, 13, 4.5, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Pernas caminhando
+          ctx.fillStyle = '#2b3a4a';
+          ctx.fillRect(-8, 9 + legSwing * 0.5, 5.5, 7);
+          ctx.fillRect(2.5, 9 - legSwing * 0.5, 5.5, 7);
+
+          // Camisa de trabalho do garimpeiro
+          ctx.fillStyle = '#b83b2a';
+          ctx.strokeStyle = '#3b120c';
+          ctx.lineWidth = 1.9;
+          ctx.beginPath();
+          ctx.roundRect(-10, -6, 20, 15, 4);
+          ctx.fill();
+          ctx.stroke();
+
+          // Cabeça
+          ctx.fillStyle = '#e6b089';
+          ctx.strokeStyle = '#2b1d12';
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          ctx.arc(0, -12, 7, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.fillStyle = '#111111';
+          ctx.fillRect(-3.2, -13, 2, 2);
+          ctx.fillRect(1.2, -13, 2, 2);
+
+          // Capacete de minerador com lanterna acesa
+          ctx.fillStyle = '#ff9f1c';
+          ctx.strokeStyle = '#4a2800';
+          ctx.lineWidth = 1.7;
+          ctx.beginPath();
+          ctx.arc(0, -14, 8.2, Math.PI, 0);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.fillStyle = '#ffbf69';
+          ctx.fillRect(-9.5, -14.5, 19, 2.5);
+
+          ctx.fillStyle = '#ffea70';
+          ctx.strokeStyle = '#4a2800';
+          ctx.lineWidth = 1.3;
+          ctx.beginPath();
+          ctx.arc(0, -17.5, 2.9, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+
+          // Saco de aniagem transbordando pepitas de ouro
+          ctx.fillStyle = '#c69c6d';
+          ctx.strokeStyle = '#4a3219';
+          ctx.lineWidth = 1.9;
+          ctx.beginPath();
+          ctx.ellipse(0, 4, 11.5, 8.5, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.fillStyle = '#ffd700';
+          ctx.strokeStyle = '#7a5900';
+          ctx.lineWidth = 1.3;
+
+          const nuggets = [
+            [-5, -2, 3.4],
+            [0, -3.5, 3.9],
+            [5, -2, 3.3],
+            [-2.5, 0.5, 2.9],
+            [3, 0.5, 2.9]
+          ];
+          for (const [nx, ny, nr] of nuggets) {
+            ctx.beginPath();
+            ctx.arc(nx, ny, nr, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+          }
+
+          // Brilho cintilante nas pepitas
+          ctx.fillStyle = '#ffea70';
+          ctx.fillRect(-1, -5, 2.1, 2.1);
+          ctx.fillRect(4, -3, 1.6, 1.6);
+
+          // Mãos segurando o saco
+          ctx.fillStyle = '#e6b089';
+          ctx.beginPath();
+          ctx.arc(-10, 3, 2.9, 0, Math.PI * 2);
+          ctx.arc(10, 3, 2.9, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.restore();
+        }
+      }
+
+      function drawParticles() {
+        for (const p of particles) {
+          const alpha = Math.max(0, p.life / p.maxLife);
+          ctx.fillStyle = p.color;
+          ctx.globalAlpha = alpha;
+          ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
+        }
+        ctx.globalAlpha = 1;
+      }
+
+      function render() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        for (let r = 0; r < ROWS; r++) {
+          for (let c = 0; c < COLS; c++) {
+            drawFloorTile(r, c);
+            const cell = grid[r][c];
+            if (cell === BORDER_TREE) {
+              drawBorderTree(r, c);
+            } else if (cell === PILLAR) {
+              drawPillar(r, c);
+            } else if (cell === PICKAXE) {
+              drawPickaxeBlock(r, c);
+            }
+          }
+        }
+
+        drawBomb();
+        drawExplosions();
+        drawEnemies();
+        drawPlayer();
+        drawParticles();
+      }
+
+      function loop(timestamp) {
+        if (!lastTimestamp) lastTimestamp = timestamp;
+        const dt = Math.min((timestamp - lastTimestamp) / 1000, 0.1);
+        lastTimestamp = timestamp;
+
+        update(dt);
+        render();
+        requestAnimationFrame(loop);
+      }
+
+      // ==================== EVENTOS DE TECLADO E TOQUE PROTEGIDOS ====================
+      const keyToDir = {
+        arrowup: 'up',
+        w: 'up',
+        arrowdown: 'down',
+        s: 'down',
+        arrowleft: 'left',
+        a: 'left',
+        arrowright: 'right',
+        d: 'right'
+      };
+
+      window.addEventListener('keydown', function (e) {
+        const key = e.key.toLowerCase();
+        if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].includes(key)) {
+          e.preventDefault();
+        }
+
+        if (key === 'r') {
+          initGame();
+          return;
+        }
+
+        if (key === ' ') {
+          placeBomb();
+          return;
+        }
+
+        const dir = keyToDir[key];
+        if (dir && !e.repeat) {
+          heldDir = dir;
+          holdDelayTimer = 0.22;
+          holdRepeatTimer = 0;
+          stepDirection(dir);
+        }
+      });
+
+      window.addEventListener('keyup', function (e) {
+        const dir = keyToDir[e.key.toLowerCase()];
+        if (dir && heldDir === dir) {
+          heldDir = null;
+        }
+      });
+
+      document.querySelectorAll('.dpad-btn').forEach(function (btn) {
+        const dir = btn.getAttribute('data-dir');
+
+        function startHold(e) {
+          e.preventDefault();
+          btn.classList.add('pressed');
+          activeDpadPointerId = e.pointerId;
+          heldDir = dir;
+          holdDelayTimer = 0.22;
+          holdRepeatTimer = 0;
+          stepDirection(dir);
+        }
+
+        function stopHold(e) {
+          btn.classList.remove('pressed');
+          if (e && activeDpadPointerId === e.pointerId) {
+            activeDpadPointerId = null;
+          }
+          if (heldDir === dir) {
+            heldDir = null;
+            lastDpadReleaseTime = performance.now();
+          }
+        }
+
+        btn.addEventListener('pointerdown', startHold);
+        btn.addEventListener('pointerup', stopHold);
+        btn.addEventListener('pointerleave', stopHold);
+        btn.addEventListener('pointercancel', stopHold);
+      });
+
+      // Proteção anti-toque acidental no botão BOMBA:
+      // 1) Ignora o mesmo dedo que estava arrastando no D-Pad
+      // 2) Ignora toques dentro de 140ms após soltar o D-Pad
+      // 3) Exige toque direto dentro da área circular real do botão
+      bombBtn.addEventListener('pointerdown', function (e) {
+        e.preventDefault();
+        if (activeDpadPointerId !== null && e.pointerId === activeDpadPointerId) {
+          return;
+        }
+        if (performance.now() - lastDpadReleaseTime < 140) {
+          return;
+        }
+        const rect = bombBtn.getBoundingClientRect();
+        const radius = rect.width / 2;
+        const dx = e.clientX - (rect.left + radius);
+        const dy = e.clientY - (rect.top + radius);
+        if (dx * dx + dy * dy > radius * radius) {
+          return;
+        }
+        placeBomb();
+      });
+
+      restartBtn.addEventListener('click', initGame);
+      playAgainBtn.addEventListener('click', initGame);
+
+      // Inicialização imediata
+      initGame();
+      render();
+      requestAnimationFrame(loop);
+    })();
+  </script>
+</body>
+</html>
